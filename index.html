@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Campus Tracker</title>
+<style>
+  :root{
+    --ink:#1c2321;
+    --paper:#f6f4ef;
+    --line:#d8d2c4;
+    --brand:#2c5f4a;
+    --brand-dark:#1d4033;
+    --amber:#c17f2a;
+    --red:#a4392f;
+    --card:#ffffff;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+  }
+  header{
+    background:var(--brand-dark);
+    color:#f6f4ef;
+    padding:18px 24px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:12px;
+    border-bottom:3px solid var(--amber);
+  }
+  header h1{
+    margin:0;
+    font-size:1.3rem;
+    letter-spacing:0.02em;
+  }
+  header h1 span{ color:var(--amber); }
+  nav{ display:flex; gap:6px; flex-wrap:wrap; }
+  nav button{
+    background:transparent;
+    border:1px solid rgba(246,244,239,0.3);
+    color:#f6f4ef;
+    padding:8px 14px;
+    border-radius:6px;
+    cursor:pointer;
+    font-size:0.9rem;
+  }
+  nav button.active{
+    background:var(--amber);
+    border-color:var(--amber);
+    color:#1c2321;
+    font-weight:600;
+  }
+  main{ max-width:1000px; margin:0 auto; padding:28px 20px 60px; }
+  .tab{ display:none; }
+  .tab.active{ display:block; }
+  .stats{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; margin-bottom:26px; }
+  .stat-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:16px;
+    text-align:center;
+  }
+  .stat-card .num{ font-size:1.8rem; font-weight:700; color:var(--brand); }
+  .stat-card .label{ font-size:0.8rem; color:#66655e; margin-top:4px; }
+  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  @media(max-width:720px){ .grid2{ grid-template-columns:1fr; } }
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:20px;
+  }
+  .card h3{ margin-top:0; }
+  form label{ display:block; font-size:0.82rem; font-weight:600; margin:10px 0 4px; color:#44443e; }
+  form input, form select, form textarea{
+    width:100%;
+    padding:8px 10px;
+    border:1px solid var(--line);
+    border-radius:6px;
+    font-size:0.92rem;
+    font-family:inherit;
+  }
+  form textarea{ resize:vertical; min-height:60px; }
+  .btn{
+    display:inline-block;
+    margin-top:14px;
+    background:var(--brand);
+    color:#fff;
+    border:none;
+    padding:10px 18px;
+    border-radius:6px;
+    cursor:pointer;
+    font-size:0.92rem;
+    font-weight:600;
+  }
+  .btn:hover{ background:var(--brand-dark); }
+  .btn-outline{
+    background:transparent;
+    color:var(--brand);
+    border:1px solid var(--brand);
+  }
+  .btn-outline:hover{ background:var(--brand); color:#fff; }
+  .item-list{ margin-top:24px; display:flex; flex-direction:column; gap:12px; }
+  .item{
+    display:flex;
+    gap:14px;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:12px;
+    align-items:flex-start;
+  }
+  .item img{ width:70px; height:70px; object-fit:cover; border-radius:6px; background:#eee; flex-shrink:0; }
+  .item .meta{ flex:1; }
+  .item .meta h4{ margin:0 0 3px; font-size:0.98rem; }
+  .item .meta p{ margin:0; font-size:0.85rem; color:#555; }
+  .tag{
+    display:inline-block;
+    font-size:0.72rem;
+    font-weight:700;
+    padding:2px 8px;
+    border-radius:20px;
+    margin-left:6px;
+    text-transform:uppercase;
+    letter-spacing:0.03em;
+  }
+  .tag.lost{ background:#fbe4e1; color:var(--red); }
+  .tag.found{ background:#e2f0e6; color:var(--brand); }
+  .status-pending{ background:#fdf1de; color:var(--amber); }
+  .status-in_progress{ background:#e1ecf7; color:#2f5c8f; }
+  .status-resolved{ background:#e2f0e6; color:var(--brand); }
+  .match-box{
+    margin-top:8px;
+    padding:8px 10px;
+    background:#fdf6e8;
+    border:1px dashed var(--amber);
+    border-radius:6px;
+    font-size:0.82rem;
+  }
+  select.status-select{ width:auto; display:inline-block; margin-left:8px; padding:4px 8px; }
+  .empty{ color:#888; font-style:italic; padding:16px 0; }
+  .name-gate{
+    max-width:380px; margin:80px auto; text-align:center;
+    background:var(--card); border:1px solid var(--line); border-radius:10px; padding:30px;
+  }
+  footer{ text-align:center; color:#888; font-size:0.8rem; padding:20px; }
+</style>
+</head>
+<body>
+
+<div id="gate" class="name-gate">
+  <h3>Welcome to Campus Tracker</h3>
+  <p style="color:#666;font-size:0.9rem;">Enter your name to continue. This is used to label what you post.</p>
+  <input id="gateName" placeholder="Your name" style="width:100%;padding:9px;border:1px solid var(--line);border-radius:6px;">
+  <button class="btn" style="width:100%;" onclick="setUser()">Continue</button>
+</div>
+
+<div id="app" style="display:none;">
+  <header>
+    <h1>Campus <span>Tracker</span></h1>
+    <nav>
+      <button data-tab="home" class="active">Home</button>
+      <button data-tab="lostfound">Lost & Found</button>
+      <button data-tab="complaints">Complaints</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- HOME -->
+    <section id="home" class="tab active">
+      <div class="stats">
+        <div class="stat-card"><div class="num" id="statLost">0</div><div class="label">Open Lost Items</div></div>
+        <div class="stat-card"><div class="num" id="statFound">0</div><div class="label">Open Found Items</div></div>
+        <div class="stat-card"><div class="num" id="statComplaints">0</div><div class="label">Active Complaints</div></div>
+      </div>
+      <div class="grid2">
+        <div class="card">
+          <h3>Lost & Found</h3>
+          <p>Report a lost item, log something you found, and let the built-in photo matcher suggest possible pairs.</p>
+          <button class="btn" onclick="switchTab('lostfound')">Open Lost & Found</button>
+        </div>
+        <div class="card">
+          <h3>Complaints</h3>
+          <p>Log hostel, classroom, library, or canteen issues and track status until they're resolved.</p>
+          <button class="btn btn-outline" onclick="switchTab('complaints')">Open Complaints</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- LOST & FOUND -->
+    <section id="lostfound" class="tab">
+      <div class="grid2">
+        <div class="card">
+          <h3>Report Lost Item</h3>
+          <form onsubmit="return addItem(event,'lost')">
+            <label>Item name</label>
+            <input required name="name" placeholder="e.g. Black wallet">
+            <label>Category</label>
+            <select name="category"><option>Electronics</option><option>Accessories</option><option>Documents</option><option>Books</option><option>Other</option></select>
+            <label>Description</label>
+            <textarea name="description" placeholder="Color, brand, distinguishing marks..."></textarea>
+            <label>Location</label>
+            <input name="location" placeholder="e.g. Library, 2nd floor">
+            <label>Photo (optional, improves matching)</label>
+            <input type="file" name="photo" accept="image/*">
+            <button class="btn" type="submit">Submit Lost Report</button>
+          </form>
+        </div>
+        <div class="card">
+          <h3>Report Found Item</h3>
+          <form onsubmit="return addItem(event,'found')">
+            <label>Item name</label>
+            <input required name="name" placeholder="e.g. Black wallet">
+            <label>Category</label>
+            <select name="category"><option>Electronics</option><option>Accessories</option><option>Documents</option><option>Books</option><option>Other</option></select>
+            <label>Description</label>
+            <textarea name="description" placeholder="Color, brand, distinguishing marks..."></textarea>
+            <label>Location</label>
+            <input name="location" placeholder="e.g. Canteen">
+            <label>Photo (optional, improves matching)</label>
+            <input type="file" name="photo" accept="image/*">
+            <button class="btn" type="submit">Submit Found Report</button>
+          </form>
+        </div>
+      </div>
+
+      <h3 style="margin-top:30px;">All Items</h3>
+      <div class="item-list" id="itemList"></div>
+    </section>
+
+    <!-- COMPLAINTS -->
+    <section id="complaints" class="tab">
+      <div class="card">
+        <h3>Log a Complaint</h3>
+        <form onsubmit="return addComplaint(event)">
+          <label>Category</label>
+          <select name="category"><option value="hostel">Hostel</option><option value="classroom">Classroom</option><option value="library">Library</option><option value="canteen">Canteen</option><option value="other">Other</option></select>
+          <label>Title</label>
+          <input required name="title" placeholder="Short summary">
+          <label>Description</label>
+          <textarea name="description" placeholder="What's the issue?"></textarea>
+          <label>Location</label>
+          <input name="location" placeholder="e.g. Block C, Room 214">
+          <label>Priority</label>
+          <select name="priority"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option></select>
+          <button class="btn" type="submit">Submit Complaint</button>
+        </form>
+      </div>
+
+      <h3 style="margin-top:30px;">All Complaints</h3>
+      <div class="item-list" id="complaintList"></div>
+    </section>
+  </main>
+
+  <footer>Campus Lost & Found + Complaint Tracker — client-side demo</footer>
+</div>
+
+<script>
+let currentUser = null;
+let items = [];       // lost & found items
+let complaints = [];
+
+// ---------- storage helpers ----------
+// Note: data lives in memory for this browser session only.
+// Reload the page and it resets (this is a front-end-only demo;
+// the PHP/MySQL version persists data properly in a real database).
+async function loadData(){
+  // items and complaints already initialized as empty arrays above
+}
+async function saveItems(){
+  // no-op: in-memory only
+}
+async function saveComplaints(){
+  // no-op: in-memory only
+}
+
+// ---------- user gate ----------
+function setUser(){
+  const v = document.getElementById('gateName').value.trim();
+  if(!v){ return; }
+  currentUser = v;
+  document.getElementById('gate').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  init();
+}
+
+// ---------- tabs ----------
+document.querySelectorAll('nav button').forEach(btn=>{
+  btn.addEventListener('click', ()=> switchTab(btn.dataset.tab));
+});
+function switchTab(id){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelector(`nav button[data-tab="${id}"]`).classList.add('active');
+}
+
+// ---------- perceptual hash (average hash, 8x8) ----------
+function fileToHash(file){
+  return new Promise((resolve)=>{
+    if(!file){ resolve(null); return; }
+    const img = new Image();
+    const reader = new FileReader();
+    reader.onload = (e)=>{
+      img.onload = ()=>{
+        const c = document.createElement('canvas');
+        c.width = 8; c.height = 8;
+        const ctx = c.getContext('2d');
+        ctx.drawImage(img,0,0,8,8);
+        const data = ctx.getImageData(0,0,8,8).data;
+        let gray = [];
+        for(let i=0;i<data.length;i+=4){
+          gray.push((data[i]+data[i+1]+data[i+2])/3);
+        }
+        const avg = gray.reduce((a,b)=>a+b,0)/gray.length;
+        const hash = gray.map(g => g>=avg ? '1':'0').join('');
+        resolve({hash, dataUrl:e.target.result});
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+function hammingDistance(a,b){
+  if(!a || !b || a.length!==b.length) return 64;
+  let d=0;
+  for(let i=0;i<a.length;i++) if(a[i]!==b[i]) d++;
+  return d;
+}
+function similarity(dist){ return Math.round((1 - dist/64)*100); }
+
+// ---------- lost & found ----------
+async function addItem(ev, type){
+  ev.preventDefault();
+  const f = ev.target;
+  const file = f.photo.files[0];
+  const hashResult = await fileToHash(file);
+  const item = {
+    id: Date.now(),
+    type,
+    name: f.name.value,
+    category: f.category.value,
+    description: f.description.value,
+    location: f.location.value,
+    hash: hashResult ? hashResult.hash : null,
+    image: hashResult ? hashResult.dataUrl : null,
+    status: 'open',
+    postedBy: currentUser,
+    date: new Date().toLocaleDateString()
+  };
+  items.unshift(item);
+  await saveItems();
+  f.reset();
+  renderItems();
+  renderStats();
+  return false;
+}
+
+function findMatches(item){
+  const opposite = item.type === 'lost' ? 'found' : 'lost';
+  return items
+    .filter(i => i.type===opposite && i.status==='open')
+    .map(i => {
+      let score = 0;
+      if(i.category === item.category) score += 30;
+      if(item.hash && i.hash){
+        const dist = hammingDistance(item.hash, i.hash);
+        score += similarity(dist) * 0.7;
+      }
+      return {item:i, score:Math.round(score)};
+    })
+    .filter(m => m.score >= 40)
+    .sort((a,b)=>b.score-a.score)
+    .slice(0,2);
+}
+
+function renderItems(){
+  const list = document.getElementById('itemList');
+  if(items.length===0){ list.innerHTML = '<div class="empty">No items reported yet.</div>'; return; }
+  list.innerHTML = items.map(item=>{
+    const matches = findMatches(item);
+    const matchHtml = matches.length ? `<div class="match-box">Possible match: ${matches.map(m=>`<b>${m.item.name}</b> (${m.score}% similar, ${m.item.category})`).join(', ')}</div>` : '';
+    return `
+      <div class="item">
+        <img src="${item.image || 'data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2270%22 height=%2270%22><rect width=%22100%25%22 height=%22100%25%22 fill=%22%23eee%22/></svg>'}" alt="">
+        <div class="meta">
+          <h4>${item.name} <span class="tag ${item.type}">${item.type}</span></h4>
+          <p>${item.description || 'No description'}</p>
+          <p style="margin-top:4px;">${item.category} · ${item.location || 'Unknown location'} · posted by ${item.postedBy} on ${item.date}</p>
+          ${matchHtml}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ---------- complaints ----------
+async function addComplaint(ev){
+  ev.preventDefault();
+  const f = ev.target;
+  const c = {
+    id: Date.now(),
+    category: f.category.value,
+    title: f.title.value,
+    description: f.description.value,
+    location: f.location.value,
+    priority: f.priority.value,
+    status: 'pending',
+    postedBy: currentUser,
+    date: new Date().toLocaleDateString()
+  };
+  complaints.unshift(c);
+  await saveComplaints();
+  f.reset();
+  renderComplaints();
+  renderStats();
+  return false;
+}
+
+async function updateStatus(id, newStatus){
+  const c = complaints.find(x=>x.id===id);
+  if(c) c.status = newStatus;
+  await saveComplaints();
+  renderComplaints();
+  renderStats();
+}
+
+function renderComplaints(){
+  const list = document.getElementById('complaintList');
+  if(complaints.length===0){ list.innerHTML = '<div class="empty">No complaints logged yet.</div>'; return; }
+  list.innerHTML = complaints.map(c=>`
+    <div class="item">
+      <div class="meta" style="width:100%;">
+        <h4>${c.title} <span class="tag status-${c.status}">${c.status.replace('_',' ')}</span></h4>
+        <p>${c.description || 'No description'}</p>
+        <p style="margin-top:4px;">${c.category} · ${c.location || 'Unspecified'} · priority: ${c.priority} · by ${c.postedBy} on ${c.date}</p>
+        <label style="display:inline;font-weight:600;font-size:0.8rem;">Update status:</label>
+        <select class="status-select" onchange="updateStatus(${c.id}, this.value)">
+          <option value="pending" ${c.status==='pending'?'selected':''}>Pending</option>
+          <option value="in_progress" ${c.status==='in_progress'?'selected':''}>In Progress</option>
+          <option value="resolved" ${c.status==='resolved'?'selected':''}>Resolved</option>
+        </select>
+      </div>
+    </div>`).join('');
+}
+
+function renderStats(){
+  document.getElementById('statLost').textContent = items.filter(i=>i.type==='lost' && i.status==='open').length;
+  document.getElementById('statFound').textContent = items.filter(i=>i.type==='found' && i.status==='open').length;
+  document.getElementById('statComplaints').textContent = complaints.filter(c=>c.status!=='resolved').length;
+}
+
+async function init(){
+  await loadData();
+  renderItems();
+  renderComplaints();
+  renderStats();
+}
+</script>
+</body>
+</html>
